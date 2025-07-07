@@ -1,10 +1,10 @@
 from ultralytics import YOLO
 
 # 모델 로드 (yolo11n.pt 또는 yolo11.pt 등)
-model = YOLO("YOLO_pt\kickboardBrand_yolov11s.pt")
+model = YOLO("YOLO\person_yolov11m.pt")
 
 # 분석할 이미지 경로 지정
-image_path = "output\kickboard_id4_frame99.jpg"
+image_path = "output\kickboard_id6_frame261.jpg"
 
 # 객체 감지 실행
 results = model(image_path)
