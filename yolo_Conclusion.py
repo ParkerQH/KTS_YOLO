@@ -1,10 +1,10 @@
 from ultralytics import YOLO
 
 # 모델 로드 (yolo11n.pt 또는 yolo11.pt 등)
-model = YOLO("best.pt")
+model = YOLO("YOLO_pt/kickboardBrand_yolov11s.pt")
 
 # 분석할 이미지 경로 지정
-image_path = "KakaoTalk_20250704_141724791.png"
+image_path = "imageData/KakaoTalk_20250704_141724791.png"
 
 # 객체 감지 실행
 results = model(image_path)
