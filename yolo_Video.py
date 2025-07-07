@@ -26,7 +26,7 @@ track_history = defaultdict(lambda: deque(maxlen=STATIONARY_FRAMES))
 track_duration = defaultdict(int)
 captured_ids = set()
 
-video_path = "Data/DJI_0086.MP4"
+video_path = "Data/DJI_0089.MP4"
 cap = cv2.VideoCapture(video_path)
 
 frame_count = 0
@@ -92,13 +92,14 @@ while cap.isOpened():
 
             track_duration[obj_id] += 1
 
+            # 트랙킹 2초 이상, conf 0.7 이상
             if (
                 track_duration[obj_id] >= CAPTURE_FRAMES
                 and obj_id not in captured_ids
                 and conf >= 0.7
             ):
                 x1, y1, x2, y2 = box
-                pad = 80
+                pad = 100
                 x1 = max(int(x1) - pad, 0)
                 y1 = max(int(y1) - pad, 0)
                 x2 = min(int(x2) + pad, frame.shape[1])
@@ -145,7 +146,7 @@ while cap.isOpened():
                 blob.make_public()
                 file_url = blob.public_url
 
-                # GPS 정보(예시)
+                # GPS 정보(CCTV 고정값)
                 lat, lon = "37.3005","127.0392"
                 kst = pytz.timezone('Asia/Seoul')
 
@@ -153,7 +154,8 @@ while cap.isOpened():
                     "date": datetime.now(kst),
                     "gpsInfo": f"{lat} {lon}",
                     "imageUrl": file_url,
-                    "userId": "CCTV Report"
+                    "userId": "CCTV Report",
+                    "violation": "CCTV 실시간 감지"
                 }
 
                 # Firestore에 저장 (컬렉션: Report, 문서: random_file_id)
