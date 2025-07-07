@@ -1,3 +1,5 @@
 output_frames/
 Data/DJI_0086.MP4
 Data/DJI_0089.MP4
+firebase_config.py
+Firebase/serviceAccountKey.json
