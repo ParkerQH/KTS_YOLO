@@ -7,7 +7,8 @@ from collections import defaultdict, deque
 output_dir = 'output'
 os.makedirs(output_dir, exist_ok=True)
 
-model = YOLO("YOLO/drone_yolov11m.pt")
+model_kickboard = YOLO("YOLO/drone_yolov11m.pt")
+model_person = YOLO("YOLO/person_yolov11m.pt")
 tracker = "YOLO/bytetrack.yaml"
 STATIONARY_FRAMES = 10
 MOVE_THRESHOLD = 5
@@ -30,7 +31,7 @@ while cap.isOpened():
 
     frame_count += 1
 
-    results = model.track(
+    results = model_kickboard.track(
         frame,
         persist=True,
         tracker=tracker,
@@ -67,11 +68,11 @@ while cap.isOpened():
 
             track_duration[obj_id] += 1
 
-            # 2초 유지 & conf 0.65 이상 & 중복 저장 방지
+            # 2초 이상 유지 & conf 0.7 이상 & 중복 저장 방지
             if (
-                track_duration[obj_id] == CAPTURE_FRAMES
+                track_duration[obj_id] >= CAPTURE_FRAMES
                 and obj_id not in captured_ids
-                and conf >= 0.65
+                and conf >= 0.7
             ):
                 x1, y1, x2, y2 = box
                 pad = 80  # 넓은 영역으로 확장
@@ -79,6 +80,34 @@ while cap.isOpened():
                 y1 = max(int(y1) - pad, 0)
                 x2 = min(int(x2) + pad, frame.shape[1])
                 y2 = min(int(y2) + pad, frame.shape[0])
+
+                # 1. 해당 프레임에서 사람 모델로 한번만 추가 추론
+                person_results = model_person(frame)
+                person_boxes = []
+                if person_results[0].boxes is not None:
+                    p_boxes = person_results[0].boxes.xyxy.cpu().numpy()
+                    p_clss = person_results[0].boxes.cls.cpu().numpy()
+                    for p_box, p_cls in zip(p_boxes, p_clss):
+                        if int(p_cls) == 0:  # 사람 클래스 번호(모델에 따라 다를 수 있음)
+                            person_boxes.append(p_box)
+
+                # 2. 킥보드 박스와 겹치는 사람 박스가 있으면 합집합으로 확장
+                for pbox in person_boxes:
+                    px1, py1, px2, py2 = map(int, pbox)
+                    pw, ph = px2 - px1, py2 - py1
+                    # 너무 큰 사람 박스는 무시
+                    if pw > frame.shape[1] * 0.5 or ph > frame.shape[0] * 0.5:
+                        continue
+                    # 킥보드와 겹치는 경우만 확장
+                    if not (px2 < x1 or px1 > x2 or py2 < y1 or py1 > y2):
+                        x1 = min(x1, px1)
+                        y1 = min(y1, py1)
+                        x2 = max(x2, px2)
+                        y2 = max(y2, py2)
+                # 확장 영역이 너무 크면 킥보드 박스만 사용
+                crop_w, crop_h = x2 - x1, y2 - y1
+                if crop_w > frame.shape[1] * 0.7 or crop_h > frame.shape[0] * 0.7:
+                    x1, y1, x2, y2 = box
 
                 crop_img = frame[y1:y2, x1:x2]
                 save_path = os.path.join(output_dir, f"kickboard_id{int(obj_id)}_frame{frame_count}_conf{conf:.2f}.jpg")
