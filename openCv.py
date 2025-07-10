@@ -30,7 +30,7 @@ def extract_frames(video_path, output_dir, frame_interval=7):
     print(f'저장된 이미지 수: {saved}')
 
 if __name__ == '__main__':
-    video_path = 'DJI_0086.mp4'  # 입력 영상 파일명
-    output_dir = 'output_frames2'  # 저장 폴더명
+    video_path = 'Data\DJI_0092.MP4'  # 입력 영상 파일명
+    output_dir = 'output_frames'  # 저장 폴더명
     make_output_dir(output_dir)
     extract_frames(video_path, output_dir, frame_interval=10)

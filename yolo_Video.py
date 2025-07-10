@@ -16,8 +16,8 @@ bucket = storage.bucket()
 output_dir = 'output'
 os.makedirs(output_dir, exist_ok=True)
 
-model_kickboard = YOLO("YOLO/drone_yolov11m.pt")
-model_person = YOLO("YOLO/person_yolov11m.pt")
+model_kickboard = YOLO("YOLO/drone_yolov11l.pt")
+model_person = YOLO("YOLO/person_yolov11l.pt")
 tracker = "YOLO/bytetrack.yaml"
 STATIONARY_FRAMES = 10
 MOVE_THRESHOLD = 5
@@ -99,7 +99,7 @@ while cap.isOpened():
                 and conf >= 0.7
             ):
                 x1, y1, x2, y2 = box
-                pad = 100
+                pad = 50
                 x1 = max(int(x1) - pad, 0)
                 y1 = max(int(y1) - pad, 0)
                 x2 = min(int(x2) + pad, frame.shape[1])

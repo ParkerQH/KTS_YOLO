@@ -1,15 +1,16 @@
+import os
 import cv2
 import numpy as np
 import requests
 import tempfile
 from ultralytics import YOLO
-from firebase_admin import firestore
+from firebase_admin import storage, firestore
 
 # YOLO 모델 로드
 model_kickboard = YOLO('YOLO/kickboard_yolov11s.pt')
 model_person    = YOLO('YOLO/person_yolov11m.pt')
 model_helmet    = YOLO('YOLO/helmet_yolov11m.pt')
-model_brand     = YOLO('YOLO/kickboardBrand_yolov11s.pt')
+model_brand     = YOLO('YOLO/kickboardBrand_yolov11m.pt')
 
 def download_image(url):
     """이미지 URL에서 이미지를 다운로드해 numpy array로 반환"""
@@ -85,10 +86,86 @@ def process_image(image_url, date, user_id, violation, doc_id):
                         cv2.putText(image, label, (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
         draw_boxes(helmet_results, image, (0,0,255), 'Helmet')
-        cv2.imwrite(f'output/annotated_{doc_id}.jpg', image)
+        # cv2.imwrite(f'output/annotated_{doc_id}.jpg', image)
+
+        # 분석 이미지 저장 (Storage)
+        bucket = storage.bucket()
+        conclusion_blob = bucket.blob(f"Conclusion/{doc_id}.jpg")
+
+        # 임시 파일 생성 (분석 이미지용)
+        _, temp_annotated = tempfile.mkstemp(suffix=".jpg")
+        cv2.imwrite(temp_annotated, image)
+        conclusion_blob.upload_from_filename(temp_annotated)
+        conclusion_url = conclusion_blob.public_url
+
+        # 사진 지번 주소 출력
+        api_key = os.getenv("VWorld_API")
+        db_fs = firestore.client()
+        doc_ref = db_fs.collection("Report").document(doc_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            doc_data = doc.to_dict()
+            gps_info = doc_data.get("gpsInfo")
+        if gps_info:
+            lat_str, lon_str = gps_info.strip().split()
+            lat = float(lat_str)
+            lon = float(lon_str)
+            parcel_addr = reverse_geocode(lat, lon, api_key)
+
+        # Firestore에 결과 저장
+        doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
+        conclusion_data = {
+            "date" : date,
+            "userId" : user_id,
+            "aiConclusion" : traffic_violation_detection,
+            "violation": violation,
+            "confidence": top_helmet_confidence,
+            "detectedBrand": top_class,
+            "imageUrl": conclusion_url,
+            "region": parcel_addr,
+            "gpsInfo": f"{lat} {lon}",
+            "reportImgUrl": imageUrl
+        }
+
+        if traffic_violation_detection in ("사람 감지 실패", "킥보드 감지 실패"):
+            conclusion_data.update({
+                "result": "반려",
+                "reason": traffic_violation_detection
+            })
+        else :
+            conclusion_data.update({
+                "result": "미확인"
+            })
+
+        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+
+        print(f"✅ 분석된 사진 url : {imageUrl}\n")
 
     else:
         print("🚫 킥보드 또는 사람이 감지되지 않음")
+
+def reverse_geocode(lat, lon, api_key):
+    url = "https://api.vworld.kr/req/address"
+    params = {
+        "service": "address",
+        "request": "getAddress",
+        "crs": "epsg:4326",
+        "point": f"{lon},{lat}",
+        "format": "json",
+        "type": "parcel",
+        "key": api_key,
+    }
+    response = requests.get(url, params=params)
+
+    # 반환값 단순화
+    if response.status_code == 200:
+        data = response.json()
+        if data["response"]["status"] == "OK":
+            # 첫 번째 결과에서 지번주소 추출
+            result = data["response"]["result"][0]
+            if "text" in result:
+                return result["text"]  # 지번주소만 반환
+    return None
 
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
