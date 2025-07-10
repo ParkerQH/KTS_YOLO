@@ -16,8 +16,8 @@ bucket = storage.bucket()
 output_dir = 'output'
 os.makedirs(output_dir, exist_ok=True)
 
-model_kickboard = YOLO("YOLO/drone_yolov11l.pt")
-model_person = YOLO("YOLO/person_yolov11l.pt")
+model_kickboard = YOLO("YOLO/drone_yolov11l(2).pt")
+model_person = YOLO("YOLO/person_yolov11l(2).pt")
 tracker = "YOLO/bytetrack.yaml"
 STATIONARY_FRAMES = 10
 MOVE_THRESHOLD = 5
