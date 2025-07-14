@@ -66,6 +66,7 @@ while cap.isOpened():
     )
 
     annotated_frame = frame.copy()
+    
 
     if results[0].boxes is not None:
         boxes = results[0].boxes.xyxy.cpu().numpy()
