@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -5,11 +6,13 @@ from dotenv import load_dotenv
 # .env 로드
 load_dotenv()
 
-# YOLO 모델 로드
-model_kickboard = YOLO("YOLO/kickboard_yolov11s.pt")
-model_person = YOLO("YOLO/person_yolov11m.pt")
-model_helmet = YOLO("YOLO/helmet_yolov11m.pt")
-model_brand = YOLO("YOLO/kickboardBrand_yolov11m.pt")
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_PATH, "YOLO")
+
+model_kickboard = YOLO(os.path.join(MODEL_PATH, "kickboard_yolov11l.pt"))
+model_person = YOLO(os.path.join(MODEL_PATH, "person_yolov11l.pt"))
+model_helmet = YOLO(os.path.join(MODEL_PATH, "helmet_yolov11l.pt"))
+model_brand = YOLO(os.path.join(MODEL_PATH, "kickboardBrand_yolov11l.pt"))
 
 
 # 킥보드 분석 모듈
@@ -44,6 +47,7 @@ def brand_analysis(image):
         if filtered:
             best_cls, best_conf = max(filtered, key=lambda x: x[1])
             best_brand_name = model_brand.names[int(best_cls)]
+            print(f"✅ 브랜드 감지 : {best_brand_name}")
             return best_brand_name
         else:
             print("🚫 conf 0.7 이상 브랜드 감지 없음")

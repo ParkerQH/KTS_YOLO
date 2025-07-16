@@ -29,15 +29,25 @@ def process_image(image_url, date, user_id, violation, doc_id):
 
     traffic_violation_detection = []
 
-    # 1-1. 킥보드 감지
-    if not YOLO.kickboard_analysis(image):
+    # 1. 킥보드, 사람 감지
+    kickboard = YOLO.kickboard_analysis(image)
+    person = YOLO.person_analysis(image)
+
+    # 1-2. 킥보드 감지 피드백
+    if kickboard:
+        print("🚫 킥보드 감지 안됨")
+    else:
         traffic_violation_detection.append("킥보드 감지 실패")
+        print("🚫 킥보드 감지 안됨")
 
-    # 1-2. 사람 감지
-    if not YOLO.person_analysis(image):
+    # 1-3. 사람 감지 피드백
+    if person:
+        print("✅ 사람 감지")
+    else:
         traffic_violation_detection.append("사람 감지 실패")
-
-    if YOLO.kickboard_analysis(image) and YOLO.person_analysis(image):
+        print("🚫 사람 감지 안됨")
+        
+    if kickboard and person:
         # 2. 자세 사람의 자세 분석(LSTM)
        
         # 3-1. 전동킥보드 브랜드 분석
@@ -48,8 +58,10 @@ def process_image(image_url, date, user_id, violation, doc_id):
         if helmet_detected:
             YOLO.draw_boxes(helmet_results, image, (0, 0, 255), "Helmet")
             # cv2.imwrite(f"output/annotated_{doc_id}.jpg", image)
+            print("✅ 헬멧 감지")
         else:
             traffic_violation_detection.append("헬멧 미착용")
+            print("🚫 헬멧 감지 안됨")
 
         # 분석 이미지 저장 (Firebase Storage)
         bucket = storage.bucket()
@@ -119,9 +131,9 @@ def process_image(image_url, date, user_id, violation, doc_id):
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):
     # 초기 스냅샷은 무시 (최초 1회 실행 시 건너뜀)
-    if not hasattr(on_snapshot, "initialized"):
-        on_snapshot.initialized = True
-        return
+    # if not hasattr(on_snapshot, "initialized"):
+    #     on_snapshot.initialized = True
+    #     return
 
     for change in changes:
         if change.type.name == "ADDED":
