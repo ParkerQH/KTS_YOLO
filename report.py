@@ -12,7 +12,7 @@ report_id = uuid.uuid4().hex
 user_id = "admin"
 
 # 업로드할 파일 경로
-local_file_path = "output/KakaoTalk_20250613_085914550_02.jpg"
+local_file_path = "output/kickboard_id3_frame164_conf0.72.jpg"
 
 # 파일 확장자 추출
 _, file_extension = os.path.splitext(local_file_path)
@@ -69,7 +69,8 @@ def get_lat_lon(exif_data):
     return lat, lon
 
 exif = get_exif_data(local_file_path)
-lat, lon = get_lat_lon(exif)
+# lat, lon = get_lat_lon(exif)
+lat, lon = "37.3005","127.0392"
 
 # 한국 시간대 객체 생성
 kst = pytz.timezone('Asia/Seoul')

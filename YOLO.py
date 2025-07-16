@@ -41,7 +41,7 @@ def brand_conclusion(image):
         if filtered:
             best_cls, best_conf = max(filtered, key=lambda x: x[1])
             best_brand_name = model_brand.names[int(best_cls)]
-            return best_brand_name, best_conf
+            return best_brand_name
         else:
             print("🚫 conf 0.7 이상 브랜드 감지 없음")
             return None
@@ -57,7 +57,7 @@ def helmet_conclusion(image):
     )
     confs = helmet_results[0].boxes.conf.cpu().numpy().tolist()
     # 제일 큰 conf 값 저장
-    max_conf = max(confs) if confs else None
+    max_conf = float(max(confs)) if confs else 0.0
     return helmet_detected, helmet_results, max_conf
 
 
