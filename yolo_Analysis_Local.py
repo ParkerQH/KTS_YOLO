@@ -30,21 +30,21 @@ def process_image(image_url, date, user_id, violation, doc_id):
     traffic_violation_detection = []
 
     # 1-1. 킥보드 감지
-    if not YOLO.kickboard_conclusion(image):
+    if not YOLO.kickboard_analysis(image):
         traffic_violation_detection.append("킥보드 감지 실패")
 
     # 1-2. 사람 감지
-    if not YOLO.person_conclusion(image):
+    if not YOLO.person_analysis(image):
         traffic_violation_detection.append("사람 감지 실패")
 
-    if YOLO.kickboard_conclusion(image) and YOLO.person_conclusion(image):
+    if YOLO.kickboard_analysis(image) and YOLO.person_analysis(image):
         # 2. 자세 사람의 자세 분석(LSTM)
 
         # 3-1. 전동킥보드 브랜드 분석
-        top_brand_class = YOLO.brand_conclusion(image)
+        top_brand_class = YOLO.brand_analysis(image)
 
         # 3-2. 헬멧 착용 여부 분석
-        helmet_detected, helmet_results, top_helmet_confidence = YOLO.helmet_conclusion(image)
+        helmet_detected, helmet_results, top_helmet_confidence = YOLO.helmet_analysis(image)
         if helmet_detected:
             YOLO.draw_boxes(helmet_results, image, (0, 0, 255), "Helmet")
             # cv2.imwrite(f"output/annotated_{doc_id}.jpg", image)

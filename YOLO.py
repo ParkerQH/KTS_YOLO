@@ -10,7 +10,7 @@ model_brand = YOLO("YOLO/kickboardBrand_yolov11m.pt")
 
 
 # 킥보드 분석 모듈
-def kickboard_conclusion(image):
+def kickboard_analysis(image):
     kickboard_results = model_kickboard(image)
     kickboard_detected = (
         kickboard_results[0].boxes is not None and len(kickboard_results[0].boxes) > 0
@@ -19,7 +19,7 @@ def kickboard_conclusion(image):
 
 
 # 사람 분석 모듈
-def person_conclusion(image):
+def person_analysis(image):
     person_results = model_person(image)
     person_detected = (
         person_results[0].boxes is not None and len(person_results[0].boxes) > 0
@@ -28,7 +28,7 @@ def person_conclusion(image):
 
 
 # 킥보드 브랜드 분석 모듈
-def brand_conclusion(image):
+def brand_analysis(image):
     brand_results = model_brand(image)
 
     # conf 0.7 이상 중 최고 신뢰도 브랜드 한 개만 추출
@@ -50,7 +50,7 @@ def brand_conclusion(image):
 
 
 # 헬멧 분석 모듈
-def helmet_conclusion(image):
+def helmet_analysis(image):
     helmet_results = model_helmet(image)
     helmet_detected = (
         helmet_results[0].boxes is not None and len(helmet_results[0].boxes) > 0
