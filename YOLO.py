@@ -1,10 +1,6 @@
-import os
 import cv2
 import numpy as np
-import requests
-import tempfile
 from ultralytics import YOLO
-from firebase_admin import storage, firestore
 
 # YOLO 모델 로드
 model_kickboard = YOLO("YOLO/kickboard_yolov11s.pt")
@@ -59,7 +55,10 @@ def helmet_conclusion(image):
     helmet_detected = (
         helmet_results[0].boxes is not None and len(helmet_results[0].boxes) > 0
     )
-    return helmet_detected, helmet_results
+    confs = helmet_results[0].boxes.conf.cpu().numpy().tolist()
+    # 제일 큰 conf 값 저장
+    max_conf = max(confs) if confs else None
+    return helmet_detected, helmet_results, max_conf
 
 
 # 감지 결과 시각화

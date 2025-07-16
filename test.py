@@ -41,6 +41,7 @@ if kickboard_detected and person_detected:
     )
     helmet_conf = (
         float(helmet_results[0].boxes.conf.max()) if helmet_detected else 0
+        
     )
 
     # 3-2. 브랜드 감지
