@@ -82,7 +82,7 @@ data = {
     "gpsInfo": f"{lat} {lon}",
     "imageUrl": file_url,
     "userId": "CCTV Report",
-    "violation": "CCTV 실시간 감지"
+    "violation": ["CCTV 실시간 감지"]
 }
 
 # Firestore에 저장 (컬렉션: Report, 문서: report_id)
