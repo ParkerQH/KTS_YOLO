@@ -1,14 +1,18 @@
 import os
+import requests
 
 api_key = os.getenv("VWorld_API")
 
+# 위도/경도 값을 받아와 지번주소 반환
 def gps(gps_info):
     lat_str, lon_str = gps_info.strip().split()
     lat = float(lat_str)
     lon = float(lon_str)
     parcel_addr = reverse_geocode(lat, lon, api_key)
+    return parcel_addr
 
 
+# V-WORLD API 사용
 def reverse_geocode(lat, lon, api_key):
     url = "https://api.vworld.kr/req/address"
     params = {
