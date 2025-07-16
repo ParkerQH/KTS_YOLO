@@ -19,6 +19,38 @@ def download_image(url):
         print(f"🚫 이미지 다운로드 실패: {url}")
         return None
 
+# firebase 데이터 저장 메소드
+def save_conclusion(doc_id, date, user_id, violation, result, aiConclusion=None, detectedBrand=None,
+    confidence=None, imageUrl=None, reportImgUrl=None, region=None,  gpsInfo=None):
+    
+    db_fs = firestore.client()
+    full_doc_id = f"conclusion_{doc_id}"
+    
+    # 저장할 데이터
+    conclusion_data = {
+        "date": date,
+        "userId": user_id,
+        "aiConclusion": aiConclusion or [],
+        "violation": violation,
+        "result": result,
+        "imageUrl": imageUrl,
+        "reportImgUrl": reportImgUrl or imageUrl
+    }
+    
+    # 브랜드
+    if detectedBrand:
+        conclusion_data["detectedBrand"] = detectedBrand
+    # conf 
+    if confidence is not None:
+        conclusion_data["confidence"] = confidence
+    # gps 정보가 있는 경우
+    if gpsInfo is not None:
+        conclusion_data["gpsInfo"] = gpsInfo
+    # 지번 주소
+    if region:
+        conclusion_data["region"] = region
+
+    db_fs.collection("Conclusion").document(full_doc_id).set(conclusion_data)
 
 def process_image(image_url, date, user_id, violation, doc_id):
     print(f"🔥 이미지 처리 시작: {image_url}")
@@ -35,7 +67,7 @@ def process_image(image_url, date, user_id, violation, doc_id):
 
     # 1-2. 킥보드 감지 피드백
     if kickboard:
-        print("🚫 킥보드 감지 안됨")
+        print("✅ 킥보드 감지")
     else:
         traffic_violation_detection.append("킥보드 감지 실패")
         print("🚫 킥보드 감지 안됨")
@@ -87,44 +119,27 @@ def process_image(image_url, date, user_id, violation, doc_id):
             parcel_addr = geocoding.reverse_geocode(lat, lon, os.getenv("VWorld_API"))
 
         # Firestore에 저장될 내용
-        doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
-        conclusion_data = {
-            "date": date,
-            "userId": user_id,
-            "aiConclusion": traffic_violation_detection,
-            "violation": violation,
-            "confidence": top_helmet_confidence,
-            "detectedBrand": top_brand_class,
-            "imageUrl": conclusion_url,
-            "region": parcel_addr,
-            "gpsInfo": f"{lat} {lon}",
-            "reportImgUrl": image_url,
-            "result" : "미확인"
-        }
-
-        # Firestore에 결과 저장
-        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+        save_conclusion(
+            doc_id=doc_id, date=date, user_id=user_id, violation=violation,
+            result="미확인", aiConclusion=traffic_violation_detection,
+            detectedBrand=top_brand_class,
+            confidence=top_helmet_confidence,
+            gpsInfo=f"{lat} {lon}",
+            region=parcel_addr,
+            imageUrl=conclusion_url,
+            reportImgUrl=image_url
+        )
 
         print(f"✅ 분석된 사진 url : {conclusion_url}\n")
 
     else:
         print("🛑 킥보드 혹은 사람을 감지하지 못했습니다. 자동 반려처리 진행됩니다.\n")
 
-        # Firestore에 저장될 내용
-        db_fs = firestore.client()
-        doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
-        conclusion_data = {
-            "date": date,
-            "userId": user_id,
-            "aiConclusion": traffic_violation_detection,
-            "violation": violation,
-            "imageUrl": image_url,
-            "reportImgUrl": image_url,
-            "result" : "반려"
-        }
-
-    # Firestore에 결과 저장
-        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+        save_conclusion(
+            doc_id=doc_id, date=date, user_id=user_id, violation=violation,
+            result="반려", aiConclusion=traffic_violation_detection,
+            imageUrl=image_url, reportImgUrl=image_url
+        )
 
         print(f"❌ 반려된 사진 url : {image_url}\n")
 
