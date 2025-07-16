@@ -1,5 +1,8 @@
 import os
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # 위도/경도 값을 받아와 지번주소 반환
 def gps(gps_info):

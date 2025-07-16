@@ -39,7 +39,7 @@ def process_image(image_url, date, user_id, violation, doc_id):
 
     if YOLO.kickboard_analysis(image) and YOLO.person_analysis(image):
         # 2. 자세 사람의 자세 분석(LSTM)
-
+       
         # 3-1. 전동킥보드 브랜드 분석
         top_brand_class = YOLO.brand_analysis(image)
 
@@ -87,15 +87,8 @@ def process_image(image_url, date, user_id, violation, doc_id):
             "region": parcel_addr,
             "gpsInfo": f"{lat} {lon}",
             "reportImgUrl": image_url,
+            "result" : "미확인"
         }
-
-        if ("사람 감지 실패" in traffic_violation_detection) or ("킥보드 감지 실패" in traffic_violation_detection):
-            conclusion_data.update(
-                {"result": "반려", "reason": traffic_violation_detection}
-            )
-        else:
-            conclusion_data.update({"result": "미확인"})
-
 
         # Firestore에 결과 저장
         db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
@@ -105,6 +98,23 @@ def process_image(image_url, date, user_id, violation, doc_id):
     else:
         print("🛑 킥보드 혹은 사람을 감지하지 못했습니다. 자동 반려처리 진행됩니다.\n")
 
+        # Firestore에 저장될 내용
+        db_fs = firestore.client()
+        doc_id = f"conclusion_{doc_id}"  # 문서 ID 생성
+        conclusion_data = {
+            "date": date,
+            "userId": user_id,
+            "aiConclusion": traffic_violation_detection,
+            "violation": violation,
+            "imageUrl": image_url,
+            "reportImgUrl": image_url,
+            "result" : "반려"
+        }
+
+    # Firestore에 결과 저장
+        db_fs.collection("Conclusion").document(doc_id).set(conclusion_data)
+
+        print(f"❌ 반려된 사진 url : {image_url}\n")
 
 # Firestore 실시간 리스너 설정
 def on_snapshot(col_snapshot, changes, read_time):

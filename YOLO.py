@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+from dotenv import load_dotenv
+# .env 로드
+load_dotenv()
 
 # YOLO 모델 로드
 model_kickboard = YOLO("YOLO/kickboard_yolov11s.pt")
