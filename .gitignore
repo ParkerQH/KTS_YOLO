@@ -6,3 +6,4 @@ Firebase/serviceAccountKey.json
 .env
 Data/DJI_0091.MP4
 Data/DJI_0092.MP4
+__pycache__/
