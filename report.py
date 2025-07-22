@@ -12,7 +12,7 @@ report_id = uuid.uuid4().hex
 user_id = "admin"
 
 # 업로드할 파일 경로
-local_file_path = "output/kickboard_id3_frame164_conf0.72.jpg"
+local_file_path = "output/image.png"
 
 # 파일 확장자 추출
 _, file_extension = os.path.splitext(local_file_path)

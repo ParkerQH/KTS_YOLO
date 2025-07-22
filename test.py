@@ -3,12 +3,12 @@ from ultralytics import YOLO
 
 # 각각의 모델 로드
 model_kickboard = YOLO("YOLO/kickboard_yolov11l.pt")
-model_person = YOLO("YOLO/person_yolov11l(2).pt")
+model_person = YOLO("YOLO/person_yolov11l.pt")
 model_helmet = YOLO("YOLO/helmet_yolov11l.pt")
 model_brand = YOLO("YOLO/kickboardBrand_yolov11l.pt")
 
 # 이미지 불러오기
-image_path = "output/image.png"
+image_path = "output/image7.jpg"
 image = cv2.imread(image_path)
 
 # 1. 킥보드 감지

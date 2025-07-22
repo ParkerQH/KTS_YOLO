@@ -69,12 +69,16 @@ def helmet_analysis(image):
 
 
 # 감지 결과 시각화
-def draw_boxes(results, image, color=(0, 255, 0), label=""):
+def draw_boxes(results, image, color, label=""):
     if results[0].boxes is not None:
-        for box in results[0].boxes.xyxy.cpu().numpy():
+        boxes = results[0].boxes.xyxy.cpu().numpy()
+        confs = results[0].boxes.conf.cpu().numpy()
+        for i, box in enumerate(boxes):
+            conf = confs[i]
             x1, y1, x2, y2 = map(int, box)
             cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
             if label:
+                text = f"{label}: {conf:.2f}"
                 cv2.putText(
-                    image, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2
+                    image, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2
                 )
