@@ -7,18 +7,18 @@ import uuid
 from datetime import datetime
 import pytz
 
-# Firebase 연동
+# Firebase 연동 (필요 시 활성화)
 import firebase_config
 from firebase_admin import storage, firestore
 
 db_fs = firestore.client()
 bucket = storage.bucket()
 
-# 결과 이미지 저장 폴더 생성
+# 결과 저장 폴더 생성
 output_dir = "output"
 os.makedirs(output_dir, exist_ok=True)
 
-# YOLO 모델(킥보드, 사람) 및 트래커 로드
+# 모델 및 트래커 로드
 base_dir = os.path.dirname(os.path.abspath(__file__))
 model_kickboard = YOLO(os.path.join(base_dir, "YOLO", "drone_yolov11l(2).pt"))
 model_person = YOLO(os.path.join(base_dir, "YOLO", "person_yolov11l(2).pt"))
@@ -31,17 +31,17 @@ track_history = defaultdict(lambda: deque(maxlen=STATIONARY_FRAMES))
 track_duration = defaultdict(int)
 captured_ids = set()
 
-# 분석할 영상 경로
+# 영상 경로 및 캡처 간격
 video_path = "Data/DJI_0089.MP4"
 cap = cv2.VideoCapture(video_path)
 frame_count = 0
 FPS = cap.get(cv2.CAP_PROP_FPS) or 30
-CAPTURE_FRAMES = int(FPS * 2)  # 2초 기준
+CAPTURE_FRAMES = int(FPS * 2)
 
-# ---- 인도 영역 다각형 지정 ----
-polygons = []            # 여러 개의 다각형
-current_polygon = []     # 그리고 있는 중인 다각형
-collecting = True
+# ---- 인도 영역 다각형 그리기 ----
+all_polygons = []
+current_polygon = []
+first_frame = None
 
 # Firebase에 중복 없는 UUID 경로 생성 함수
 def get_unique_uuid(file_extension):
@@ -54,19 +54,27 @@ def get_unique_uuid(file_extension):
             continue
         return random_file_id, storage_path
 
-# 마우스 이벤트로 영역 지정
-first_frame = None
+# 선택된 다각형 영역을 반투명하게 칠하는 함수
+def draw_polygons(frame):
+    overlay = frame.copy()
+    for polygon in all_polygons:
+        pts = np.array(polygon, np.int32)
+        cv2.fillPoly(overlay, [pts], (255, 0, 0))  # 파란색 영역
+    return cv2.addWeighted(overlay, 0.3, frame, 0.7, 0)
+
+# 마우스 클릭 이벤트
+# 좌클릭: 점 추가 / 우클릭: 현재 다각형 완료 후 다음 영역 시작
 
 def click_event(event, x, y, flags, param):
-    global polygons, current_polygon
-    if event == cv2.EVENT_LBUTTONDOWN:  # 좌클릭: 점 추가
+    global current_polygon, all_polygons
+    if event == cv2.EVENT_LBUTTONDOWN:
         current_polygon.append((x, y))
-    elif event == cv2.EVENT_RBUTTONDOWN:  # 우클릭: 현재 다각형 종료
+    elif event == cv2.EVENT_RBUTTONDOWN:
         if current_polygon:
-            polygons.append(current_polygon[:])
-            current_polygon = []
+            all_polygons.append(current_polygon.copy())
+            current_polygon.clear()
 
-# 첫 프레임 받아오기 및 마우스 콜백 설정
+# 첫 프레임에서 다각형 지정
 ret, first_frame = cap.read()
 if not ret:
     print("영상을 불러올 수 없습니다.")
@@ -76,32 +84,29 @@ if not ret:
 cv2.namedWindow("Kickboard Detection")
 cv2.setMouseCallback("Kickboard Detection", click_event)
 
-# 영역 수동 지정 루프 (Enter 누를 때까지)
-while collecting:
-    temp = first_frame.copy()
-    for poly in polygons:
-        if len(poly) > 1:
-            cv2.polylines(temp, [np.array(poly)], True, (255, 0, 0), 2)
-            cv2.fillPoly(temp, [np.array(poly)], (255, 0, 0, 50))
-        for pt in poly:
-            cv2.circle(temp, pt, 5, (0, 0, 255), -1)
-    if current_polygon:
-        cv2.polylines(temp, [np.array(current_polygon)], False, (0, 255, 255), 2)
-        for pt in current_polygon:
-            cv2.circle(temp, pt, 5, (0, 255, 255), -1)
-    cv2.imshow("Kickboard Detection", temp)
+# 마우스로 다각형 영역 지정 (Enter로 확정 / ESC로 종료)
+while True:
+    temp_frame = first_frame.copy()
+    combined_polygons = all_polygons + ([current_polygon] if current_polygon else [])
+    for polygon in combined_polygons:
+        for pt in polygon:
+            cv2.circle(temp_frame, pt, 5, (0, 0, 255), -1)  # 점: 빨간색
+        if len(polygon) > 1:
+            cv2.polylines(temp_frame, [np.array(polygon)], False, (255, 0, 0), 2)  # 선: 파란색
+    temp_frame = draw_polygons(temp_frame)
+    cv2.imshow("Kickboard Detection", temp_frame)
     key = cv2.waitKey(1)
-    if key == 13:  # Enter로 완료
+    if key == 13:  # Enter
         if current_polygon:
-            polygons.append(current_polygon[:])
-            current_polygon = []
-        collecting = False
-    elif key == 27:  # ESC로 종료
+            all_polygons.append(current_polygon.copy())
+            current_polygon.clear()
+        break
+    elif key == 27:
         cap.release()
         cv2.destroyAllWindows()
         exit()
 
-# ---- 본격 감지 루프 ----
+# ---- 객체 감지 및 조건 만족 시 저장 ----
 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
 while cap.isOpened():
     success, frame = cap.read()
@@ -113,13 +118,7 @@ while cap.isOpened():
         frame, persist=True, tracker=tracker, verbose=False, conf=0.3, iou=0.4
     )
 
-    annotated_frame = frame.copy()
-
-    # 인도 영역 시각화
-    overlay = annotated_frame.copy()
-    for poly in polygons:
-        cv2.fillPoly(overlay, [np.array(poly)], (255, 0, 0))
-    annotated_frame = cv2.addWeighted(overlay, 0.2, annotated_frame, 0.8, 0)
+    annotated_frame = draw_polygons(frame.copy())
 
     if results[0].boxes is not None:
         boxes = results[0].boxes.xyxy.cpu().numpy()
@@ -131,6 +130,7 @@ while cap.isOpened():
             if int(cls) != 0 or obj_id is None:
                 continue
 
+            # 이동량 추적
             cx = int((box[0] + box[2]) / 2)
             cy = int((box[1] + box[3]) / 2)
             track_history[obj_id].append((cx, cy))
@@ -143,11 +143,11 @@ while cap.isOpened():
 
             track_duration[obj_id] += 1
 
-            # 킥보드의 하단 중앙 좌표가 인도 위인지 확인
+            # 킥보드 하단 중앙이 인도 위에 있는지 판별
             foot_point = (int((box[0] + box[2]) / 2), int(box[3]))
-            is_on_sidewalk = any(cv2.pointPolygonTest(np.array(poly), foot_point, False) >= 0 for poly in polygons)
+            is_on_sidewalk = any(cv2.pointPolygonTest(np.array(poly), foot_point, False) >= 0 for poly in all_polygons)
 
-            # 조건 만족 시 캡처 및 저장
+            # 조건 만족 시 이미지 저장
             if (
                 track_duration[obj_id] >= CAPTURE_FRAMES
                 and obj_id not in captured_ids
@@ -161,13 +161,15 @@ while cap.isOpened():
                 x2 = min(x2 + pad, frame.shape[1])
                 y2 = min(y2 + pad, frame.shape[0])
 
-                # 사람 포함 여부 확인
+                # 사람 포함 여부 추가 판단
                 person_results = model_person(frame)
                 person_boxes = []
                 if person_results[0].boxes is not None:
-                    for pbox, pcls in zip(person_results[0].boxes.xyxy.cpu().numpy(), person_results[0].boxes.cls.cpu().numpy()):
-                        if int(pcls) == 0:
-                            person_boxes.append(pbox)
+                    p_boxes = person_results[0].boxes.xyxy.cpu().numpy()
+                    p_clss = person_results[0].boxes.cls.cpu().numpy()
+                    for p_box, p_cls in zip(p_boxes, p_clss):
+                        if int(p_cls) == 0:
+                            person_boxes.append(p_box)
 
                 for pbox in person_boxes:
                     px1, py1, px2, py2 = map(int, pbox)
@@ -180,14 +182,15 @@ while cap.isOpened():
 
                 crop_img = frame[y1:y2, x1:x2]
                 save_path = os.path.join(
-                    output_dir, f"kickboard_id{int(obj_id)}_frame{frame_count}_conf{conf:.2f}.jpg")
+                    output_dir,
+                    f"kickboard_id{int(obj_id)}_frame{frame_count}_conf{conf:.2f}.jpg",
+                )
                 cv2.imwrite(save_path, crop_img)
                 captured_ids.add(obj_id)
 
-                # ---- Firebase Storage & Firestore 연동 ----
+                # ---- Firebase Storage & Firestore 업로드 ----
                 _, file_extension = os.path.splitext(save_path)
                 random_file_id, storage_path = get_unique_uuid(file_extension)
-
                 blob = bucket.blob(storage_path)
                 blob.upload_from_filename(save_path)
                 blob.make_public()
@@ -204,13 +207,12 @@ while cap.isOpened():
                 }
                 db_fs.collection("Report").document(random_file_id).set(data)
 
-            # 박스 및 텍스트 시각화
+            # 박스 시각화
             label = f"Kickboard(ID:{int(obj_id)}) conf:{conf:.2f}"
             cv2.rectangle(annotated_frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 255, 0), 2)
             cv2.putText(annotated_frame, label, (int(box[0]), int(box[1]) - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
-    # 결과 프레임 표시
     cv2.imshow("Kickboard Detection", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
