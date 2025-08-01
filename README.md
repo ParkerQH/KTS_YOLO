@@ -48,14 +48,14 @@ CCTV 영상 분석을 통해 **킥보드가 인도에서 주행 중인 경우**,
 
 ## 📂 파일 구성
 
-KTS_YOLO/
+```KTS_YOLO/
 ├── YOLO.py # YOLO 감지 모듈 (킥보드, 사람, 브랜드, 헬멧 분석)
 ├── geocoding.py # 위경도 좌표 → 지번 주소 변환 (VWorld API)
 ├── yolo_Video.py # 영상 전체 파이프라인 처리 및 Firebase 업로드
 ├── firebase_config.py # Firebase 인증 설정
 ├── YOLO/ # 학습된 YOLO 모델들 (.pt 파일)
 ├── output/ # 감지 이미지 저장 디렉토리
-└── ...
+└── ...```
 
 ---
 
