@@ -11,7 +11,7 @@ MODEL_PATH = os.path.join(BASE_PATH, "YOLO")
 
 model_kickboard = YOLO(os.path.join(MODEL_PATH, "kickboard_yolov11l.pt"))
 model_person = YOLO(os.path.join(MODEL_PATH, "person_yolov11l(2).pt"))
-model_helmet = YOLO(os.path.join(MODEL_PATH, "helmet_yolov11l.pt"))
+model_helmet = YOLO(os.path.join(MODEL_PATH, "helmet_yolov11l(2).pt"))
 model_brand = YOLO(os.path.join(MODEL_PATH, "kickboardBrand_yolov11l.pt"))
 
 
