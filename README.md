@@ -75,19 +75,27 @@ python yolo_Video.py
 - Enter 키로 확정 → 감지 시작
 - q 키로 종료
 
-🔍 예시 이미지
+---
 
-<p align="center"> <img src="https://github.com/user-attachments/assets/67728b33-06aa-48bb-af19-6b7428145fbc" width="600"/> </p>
-※ 감지된 킥보드가 이미지로 캡처되고, Firebase에 자동 저장됩니다.
+### 📸 예시 이미지 (Demo)
 
-✨ 향후 개선점 (아이디어)
-웹 기반 감지 영역 선택 및 로그 뷰어
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/67728b33-06aa-48bb-af19-6b7428145fbc" width="600"/>
+</p>
 
-사람+킥보드 동시 존재 시 '주행 중'으로 간주하는 로직 강화
+> 감지된 킥보드는 이미지로 캡처되고, **Firebase**에 자동 저장됩니다.
 
-GPS 연동 실제 CCTV 위치 기반 자동화
+---
 
-📬 Contact
-개발자: 박창률
+### 💡 향후 개선점
 
-GitHub: ParkerQH
+- 🖥 **웹 기반 감지 영역 선택** 및 로그 뷰어 개발  
+- 🛴 사람 + 킥보드 동시 존재 시 **'주행 중'으로 간주**하는 로직 강화  
+- 🛰️ **GPS 연동**을 통한 실제 CCTV 위치 기반 자동화  
+
+---
+
+### 📬 Contact
+
+- **개발자**: 박창률  
+- **GitHub**: [ParkerQH](https://github.com/ParkerQH)
