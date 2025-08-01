@@ -2,6 +2,7 @@
 
 YOLOv11 기반 객체 인식 + 다중 객체 추적 + 지리 정보 변환을 결합한 **안전규제 위반 전동킥보드 자동 단속 시스템**입니다.  
 CCTV 영상 분석을 통해 **킥보드가 인도에서 주행 중인 경우**, 해당 이미지를 **킥보드+사람을 그룹화하여** 캡처하고 Firebase에 업로드합니다.
+AI 기반 통합 분석 시스템인 **KTS_AI_Analysis**의 하위 모듈로, **객체 탐지**와 **CCTV 영상 분석 및 자동 신고** 하는 데 활용됩니다.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python"/>
@@ -18,6 +19,7 @@ CCTV 영상 분석을 통해 **킥보드가 인도에서 주행 중인 경우**,
 - **기간**: 2025.07.07 ~ 2025.07.25
 - **개발자**: 박창률
 - **주요 모듈**: `YOLO.py`, `geocoding.py`, `yolo_Video.py`
+- **연계 모듈**: `KTS_AI_Analysis`
 
 ---
 
@@ -113,14 +115,14 @@ python yolo_Video.py
 
 ---
 
-### 💡 향후 개선점
+## 💡 향후 개선점
 
 - 🛴 사람 + 킥보드 동시 트랙킹 로직 강화  
   동일 프레임 내 **2인 이상**이 킥보드 근처에 존재할 경우, **‘2인 탑승’으로 간주**하는 고급 감지 로직 적용
 
 ---
 
-### 📦 통합 프로젝트 구조 안내
+## 📦 통합 프로젝트 구조 안내
 
 본 프로젝트는 전체 AI 기반 분석 시스템인 **AI_Analysis**의 하위 모듈 중 하나입니다.
 
@@ -131,11 +133,11 @@ python yolo_Video.py
 - CCTV 영상을 통해 인도 내 주행 판단 및 이미지 캡처
 - 감지된 영상 장면을 Firebase에 업로드하여 실시간 기록 저장
 
-👉 전체 파이프라인 및 통합 구조는 **`AI_Analysis` 리포지토리**에서 별도로 관리됩니다.
+👉 전체 파이프라인은 **[KTS_AI_Analysis](https://github.com/ParkerQH/KTS_AI_Analysis)** 리포지토리에서 확인할 수 있습니다.
 
 ---
 
-### 📬 Contact
+## 📬 Contact
 
 - **개발자**: 박창률  
 - **GitHub**: [ParkerQH](https://github.com/ParkerQH)
