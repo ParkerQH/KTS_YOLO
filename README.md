@@ -62,17 +62,21 @@ KTS_YOLO/
 ### 1. 환경 설정
 ```bash
 pip install -r requirements.txt
+```
 .env 파일 생성:
+```bash
 VWorld_API=여기에_발급받은_API_키
-
+```
 ### 2. 실행
+```bash
 python yolo_Video.py
+```
 마우스로 인도 영역을 다각형으로 지정
 Enter 키로 확정 → 감지 시작
 q 키로 종료
 
 🔍 예시 이미지
-<p align="center"> <img src="your/image/path/here.jpg" width="600"/> </p>
+<p align="center"> <img src="https://github.com/user-attachments/assets/67728b33-06aa-48bb-af19-6b7428145fbc" width="600"/> </p>
 ※ 감지된 킥보드가 이미지로 캡처되고, Firebase에 자동 저장됩니다.
 
 ✨ 향후 개선점 (아이디어)
