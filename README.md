@@ -57,6 +57,30 @@ KTS_YOLO/
 ├── output/ # 감지 이미지 저장 디렉토리
 └── ...
 ```
+
+---
+
+## 🎬 데모 미리보기
+
+<p align="center">
+  <img src="assets/Real-time tracking.gif" width="400"/>
+  <img src="assets/Real-time tracking_1.gif" width="400"/>
+</p>
+
+> YOLOv11 + ByteTrack 기반으로 CCTV에서 킥보드를 실시간으로 감지 및 추적합니다.
+
+<p align="center">
+  <img src="assets/cctv image detection system.gif" width="500"/>
+</p>
+
+> 사용자가 마우스로 인도 영역을 지정하고, 해당 영역 내 주행하는 킥보드를 감지합니다.
+
+<p align="center">
+  <img src="assets/Photos automatically reported.jpg" width="400"/>
+</p>
+
+> 감지 조건을 만족한 킥보드 + 사람 객체는 이미지로 캡처되어 Firebase에 저장됩니다.
+
 ---
 
 ## 🖥 실행 방법
@@ -65,7 +89,7 @@ KTS_YOLO/
 ```bash
 pip install -r requirements.txt
 ```
-.env 파일 생성:
+- .env 파일 생성:
 ```bash
 VWorld_API=여기에_발급받은_API_키
 ```
