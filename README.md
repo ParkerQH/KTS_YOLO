@@ -4,7 +4,7 @@ YOLOv11 기반 객체 인식 + 다중 객체 추적 + 지리 정보 변환을 �
 CCTV 영상 분석을 통해 **킥보드가 인도에 장시간 정차한 경우**, 해당 이미지를 캡처하고 Firebase에 업로드합니다.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10-blue?logo=python"/>
+  <img src="https://img.shields.io/badge/Python-3.12-blue?logo=python"/>
   <img src="https://img.shields.io/badge/YOLOv11-ObjectDetection-red"/>
   <img src="https://img.shields.io/badge/ByteTrack-MultiObjectTracking-green"/>
   <img src="https://img.shields.io/badge/Firebase-Upload-yellow"/>
@@ -46,4 +46,43 @@ CCTV 영상 분석을 통해 **킥보드가 인도에 장시간 정차한 경우
 ---
 
 ## 📂 파일 구성
+KTS_YOLO/
+├── YOLO.py # YOLO 감지 모듈 (킥보드, 사람, 브랜드, 헬멧 분석)
+├── geocoding.py # 위경도 좌표 → 지번 주소 변환 (VWorld API)
+├── yolo_Video.py # 영상 전체 파이프라인 처리 및 Firebase 업로드
+├── firebase_config.py # Firebase 인증 설정
+├── YOLO/ # 학습된 YOLO 모델들 (.pt 파일)
+├── output/ # 감지 이미지 저장 디렉토리
+└── ...
 
+---
+
+## 🖥 실행 방법
+
+### 1. 환경 설정
+```bash
+pip install -r requirements.txt
+.env 파일 생성:
+VWorld_API=여기에_발급받은_API_키
+
+### 2. 실행
+python yolo_Video.py
+마우스로 인도 영역을 다각형으로 지정
+Enter 키로 확정 → 감지 시작
+q 키로 종료
+
+🔍 예시 이미지
+<p align="center"> <img src="your/image/path/here.jpg" width="600"/> </p>
+※ 감지된 킥보드가 이미지로 캡처되고, Firebase에 자동 저장됩니다.
+
+✨ 향후 개선점 (아이디어)
+웹 기반 감지 영역 선택 및 로그 뷰어
+
+사람+킥보드 동시 존재 시 '주행 중'으로 간주하는 로직 강화
+
+GPS 연동 실제 CCTV 위치 기반 자동화
+
+📬 Contact
+개발자: 박창률
+
+GitHub: ParkerQH
