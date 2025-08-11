@@ -74,10 +74,7 @@ def helmet_analysis(image):
     helmet_detected = (
         helmet_results[0].boxes is not None and len(helmet_results[0].boxes) > 0
     )
-    confs = helmet_results[0].boxes.conf.cpu().numpy().tolist()
-    # 제일 큰 conf 값 저장
-    max_conf = float(max(confs)) if confs else 0.0
-    return helmet_detected, helmet_results, max_conf
+    return helmet_detected, helmet_results
 
 
 # 감지 결과 시각화
